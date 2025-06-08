@@ -1,0 +1,306 @@
+{
+    "name": "logs",
+    "properties": {
+        "activities": [
+            {
+                "name": "Capture starting log",
+                "type": "Lookup",
+                "dependsOn": [
+                    {
+                        "activity": "email notification pileline level starting log",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "source": {
+                        "type": "SqlServerSource",
+                        "sqlReaderStoredProcedureName": "[apr25e].[uspLogsStarting]",
+                        "storedProcedureParameters": {
+                            "p_ADFName": {
+                                "type": "String",
+                                "value": {
+                                    "value": "@pipeline().DataFactory",
+                                    "type": "Expression"
+                                }
+                            },
+                            "p_parent_id": {
+                                "type": "Int32",
+                                "value": null
+                            },
+                            "p_PipelineName": {
+                                "type": "String",
+                                "value": {
+                                    "value": "@pipeline().Pipeline",
+                                    "type": "Expression"
+                                }
+                            },
+                            "p_RunID": {
+                                "type": "String",
+                                "value": {
+                                    "value": "@pipeline().RunId",
+                                    "type": "Expression"
+                                }
+                            },
+                            "p_StartTime": {
+                                "type": "DateTime",
+                                "value": {
+                                    "value": "@utcNow()",
+                                    "type": "Expression"
+                                }
+                            }
+                        },
+                        "queryTimeout": "02:00:00",
+                        "partitionOption": "None"
+                    },
+                    "dataset": {
+                        "referenceName": "SqlServerTable1",
+                        "type": "DatasetReference"
+                    },
+                    "firstRowOnly": false
+                }
+            },
+            {
+                "name": "Wait1",
+                "type": "Wait",
+                "dependsOn": [
+                    {
+                        "activity": "Capture starting log",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "userProperties": [],
+                "typeProperties": {
+                    "waitTimeInSeconds": 10
+                }
+            },
+            {
+                "name": "Capture ending log for success",
+                "type": "SqlServerStoredProcedure",
+                "dependsOn": [
+                    {
+                        "activity": "Execute Pipeline1",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "storedProcedureName": "[apr25e].[usp_UpdateLogsStarting]",
+                    "storedProcedureParameters": {
+                        "ErrorMessage": {
+                            "value": null,
+                            "type": "String"
+                        },
+                        "LogID": {
+                            "value": {
+                                "value": "@activity('Capture starting log').output.value[0].id",
+                                "type": "Expression"
+                            },
+                            "type": "Int32"
+                        },
+                        "Status": {
+                            "value": {
+                                "value": "@variables('status_success')",
+                                "type": "Expression"
+                            },
+                            "type": "String"
+                        }
+                    }
+                },
+                "linkedServiceName": {
+                    "referenceName": "Is_efnsqlserverdev_",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "Execute Pipeline1",
+                "type": "ExecutePipeline",
+                "dependsOn": [
+                    {
+                        "activity": "Wait1",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "logs_1",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true,
+                    "parameters": {
+                        "parent_id": {
+                            "value": "@activity('Capture starting log').output.value[0].id",
+                            "type": "Expression"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "email notification pileline level starting log",
+                "type": "WebActivity",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "method": "POST",
+                    "url": "https://prod-13.northcentralus.logic.azure.com:443/workflows/9200ac4fb268465083b9d36377213764/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=a2-kNb_fn3lhtcuaQ_lnT_OLbH0_ykyjhh27UkpOHCw",
+                    "body": {
+                        "To": "mahiljohith@gmail.com",
+                        "Subject": "Data Migration",
+                        "Body": "Email Notification from pipeline starting"
+                    }
+                }
+            },
+            {
+                "name": "email notification ending success",
+                "type": "WebActivity",
+                "dependsOn": [
+                    {
+                        "activity": "Capture ending log for success",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "method": "POST",
+                    "url": "https://prod-13.northcentralus.logic.azure.com:443/workflows/9200ac4fb268465083b9d36377213764/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=a2-kNb_fn3lhtcuaQ_lnT_OLbH0_ykyjhh27UkpOHCw",
+                    "body": {
+                        "To": "mahiljohith@gmail.com",
+                        "Subject": "Data Migration",
+                        "Body": "Email Notification from pipeline ending success"
+                    }
+                }
+            },
+            {
+                "name": "email notification ending fail",
+                "type": "WebActivity",
+                "dependsOn": [
+                    {
+                        "activity": "Capture ending log for failure",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "method": "POST",
+                    "url": "https://prod-13.northcentralus.logic.azure.com:443/workflows/9200ac4fb268465083b9d36377213764/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=a2-kNb_fn3lhtcuaQ_lnT_OLbH0_ykyjhh27UkpOHCw",
+                    "body": {
+                        "To": "mahiljohith@gmail.com",
+                        "Subject": "Data Migration",
+                        "Body": "Email Notification from pipeline ending failed"
+                    }
+                }
+            },
+            {
+                "name": "Capture ending log for failure",
+                "type": "SqlServerStoredProcedure",
+                "dependsOn": [
+                    {
+                        "activity": "Execute Pipeline1",
+                        "dependencyConditions": [
+                            "Failed"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "storedProcedureName": "[apr25e].[usp_UpdateLogsStarting]",
+                    "storedProcedureParameters": {
+                        "ErrorMessage": {
+                            "value": null,
+                            "type": "String"
+                        },
+                        "LogID": {
+                            "value": {
+                                "value": "@activity('Capture starting log').output.value[0].id",
+                                "type": "Expression"
+                            },
+                            "type": "Int32"
+                        },
+                        "Status": {
+                            "value": {
+                                "value": "@variables('status_fail')",
+                                "type": "Expression"
+                            },
+                            "type": "String"
+                        }
+                    }
+                },
+                "linkedServiceName": {
+                    "referenceName": "Is_efnsqlserverdev_",
+                    "type": "LinkedServiceReference"
+                }
+            }
+        ],
+        "variables": {
+            "status_success": {
+                "type": "String",
+                "defaultValue": "success"
+            },
+            "status_fail": {
+                "type": "String",
+                "defaultValue": "fail"
+            }
+        },
+        "annotations": [],
+        "lastPublishTime": "2025-05-30T18:22:23Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}
