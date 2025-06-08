@@ -1,0 +1,6 @@
+selected resource name:		logs
+selected resource type:		pipeline
+factory name:			efn-azuredatafactory-dev
+factory location:		eastus
+subscription id:		bd9fa7bc-fd6c-493e-b15e-676768238e94
+time of download (UTC):		Sun, 08 Jun 2025 15:04:50 GMT
