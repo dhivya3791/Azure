@@ -16,7 +16,7 @@
 			"recurrence": {
 				"frequency": "Minute",
 				"interval": 15,
-				"startTime": "2025-07-15T15:45:00",
+				"startTime": "2025-07-15T15:00:00",
 				"endTime": "2025-07-15T15:50:00",
 				"timeZone": "GMT Standard Time"
 			}
