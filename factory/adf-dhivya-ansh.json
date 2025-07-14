@@ -1,0 +1,9 @@
+{
+	"name": "adf-dhivya-ansh",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "e1a22fa5-cbb4-4946-ba60-96dd2ccb161d",
+		"tenantId": "86795a8e-16e6-47eb-b165-7cc469562027"
+	}
+}
