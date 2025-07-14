@@ -139,7 +139,7 @@
 				}
 			},
 			{
-				"name": "Data flow1",
+				"name": "Data Transformation",
 				"type": "ExecuteDataFlow",
 				"dependsOn": [
 					{
@@ -158,6 +158,10 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
+					"dataflow": {
+						"referenceName": "Transform_csv",
+						"type": "DataFlowReference"
+					},
 					"compute": {
 						"coreCount": 8,
 						"computeType": "General"
